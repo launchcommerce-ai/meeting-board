@@ -1320,7 +1320,7 @@ function pushBlob() {
   _syncStatus.textContent = '⬆ Pushing...';
   fetch(_BLOB, {
     method: 'PUT',
-    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+    headers: {'Content-Type': 'text/plain'},
     body: stateStr
   }).then(function(r) {
     _syncStatus.textContent = '✓ Synced ' + new Date().toLocaleTimeString();
