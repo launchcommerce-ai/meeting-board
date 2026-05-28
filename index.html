@@ -1,34 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Launch Commerce Task Board</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; color: #333; }
-    .header { background: #0a1f44; color: white; padding: 24px; text-align: center; }
-    .header h1 { font-size: 28px; margin-bottom: 8px; }
-    .header p { opacity: 0.8; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
-    .section { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #e0e0e0; }
-    .section h2 { font-size: 18px; margin-bottom: 16px; color: #0a1f44; }
-    .form-row { display: grid; grid-template-columns: 1fr 150px 120px 100px; gap: 12px; }
-    input, select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; }
-    input:focus, select:focus { outline: none; border-color: #ff7a1a; box-shadow: 0 0 0 3px rgba(255,122,26,0.1); }
-    button { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: inherit; }
-    .btn-add { background: #ff7a1a; color: white; display: flex; align-items: center; justify-content: center; gap: 6px; }
-    .btn-add:hover { background: #e66f0f; }
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-    .stat { text-align: center; padding: 16px; border: 1px solid #e0e0e0; border-radius: 8px; }
-    .stat-num { font-size: 24px; font-weight: 700; color: #0a1f44; }
-    .stat-label { font-size: 12px; color: #666; margin-top: 4px; }
-    .tasks { display: flex; flex-direction: column; gap: 12px; }
-    .task { padding: 12px; background: #f9f9f9; border-left: 3px solid #ff7a1a; border-radius: 4px; }
-    .task-title { font-weight: 500; margin-bottom: 8px; }
-    .task-meta { font-size: 12px; color: #666; }
-    .loading { text-align: center; color: #666; }
-    .error { color: #ff6b6b; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+    .header { background: #0a1f44; color: white; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; }
+    .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; }
+    input, select { padding: 10px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+    button { padding: 10px 20px; background: #ff7a1a; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #e66f0f; }
+    .task { padding: 10px; background: #f9f9f9; margin: 10px 0; border-left: 3px solid #ff7a1a; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .stat { text-align: center; padding: 15px; background: white; border-radius: 8px; border: 1px solid #ddd; }
+    .stat-num { font-size: 24px; font-weight: bold; color: #0a1f44; }
   </style>
 </head>
 <body>
@@ -37,58 +21,52 @@
     <p>Real-time task management powered by Fathom</p>
   </div>
 
-  <div class="container">
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-num" id="openCount">0</div>
-        <div class="stat-label">Open</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num" id="doneCount">0</div>
-        <div class="stat-label">Done</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num" id="totalCount">0</div>
-        <div class="stat-label">Total</div>
-      </div>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num" id="open">0</div>
+      <div>Open</div>
     </div>
+    <div class="stat">
+      <div class="stat-num" id="done">0</div>
+      <div>Done</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="total">0</div>
+      <div>Total</div>
+    </div>
+  </div>
 
-    <div class="section">
-      <h2>Add Task</h2>
-      <div class="form-row">
-        <input type="text" id="title" placeholder="Task description">
-        <select id="assignee">
-          <option>Greg</option>
-          <option>Luisa</option>
-          <option>Yvonne</option>
-          <option>Candice</option>
-          <option>Joshua</option>
-        </select>
-        <select id="priority">
-          <option value="1">Priority 1</option>
-          <option value="2">Priority 2</option>
-          <option value="3" selected>Priority 3</option>
-          <option value="4">Priority 4</option>
-          <option value="5">Priority 5</option>
-        </select>
-        <button class="btn-add" onclick="addTask()">+ Add</button>
-      </div>
-      <div id="addStatus" style="margin-top: 12px; font-size: 12px;"></div>
-    </div>
+  <div class="card">
+    <h2>Add Task</h2>
+    <input type="text" id="title" placeholder="Task description">
+    <select id="person">
+      <option>Greg</option>
+      <option>Luisa</option>
+      <option>Yvonne</option>
+      <option>Candice</option>
+      <option>Joshua</option>
+    </select>
+    <select id="priority">
+      <option value="3">Priority 3</option>
+      <option value="1">Priority 1</option>
+      <option value="2">Priority 2</option>
+      <option value="4">Priority 4</option>
+      <option value="5">Priority 5</option>
+    </select>
+    <button onclick="addTask()">+ Add</button>
+    <div id="status" style="margin-top: 10px; font-size: 12px;"></div>
+  </div>
 
-    <div class="section">
-      <h2>Tasks</h2>
-      <div id="tasksList" class="tasks">
-        <div class="loading">Connecting to Firebase...</div>
-      </div>
-    </div>
+  <div class="card">
+    <h2>Tasks</h2>
+    <div id="tasks">Loading...</div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
 
   <script>
-    const firebaseConfig = {
+    const config = {
       apiKey: "AIzaSyAAAX_IMv6BHmQJP3FjCKmcnlSnAbaDjsw",
       authDomain: "fathom-meeting-board.firebaseapp.com",
       projectId: "fathom-meeting-board",
@@ -98,80 +76,60 @@
       databaseURL: "https://fathom-meeting-board-default-rtdb.firebaseio.com"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(config);
     const db = firebase.database();
 
-    let allTasks = [];
-
-    db.ref('tasks').on('value', (snapshot) => {
-      allTasks = [];
-      if (snapshot.exists()) {
-        snapshot.forEach((child) => {
-          allTasks.push({ id: child.key, ...child.val() });
-        });
-      }
-      renderTasks();
-    });
-
     function addTask() {
-      const title = document.getElementById('title').value.trim();
-      const assignee = document.getElementById('assignee').value;
-      const priority = parseInt(document.getElementById('priority').value);
-      const statusDiv = document.getElementById('addStatus');
-
+      const title = document.getElementById('title').value;
+      const person = document.getElementById('person').value;
+      const priority = document.getElementById('priority').value;
+      
       if (!title) {
-        statusDiv.innerHTML = '<span class="error">Please enter a task</span>';
+        document.getElementById('status').innerHTML = '<span style="color: red;">Enter a task</span>';
         return;
       }
 
-      statusDiv.innerHTML = '<span style="color: #666;">Adding...</span>';
-
       db.ref('tasks').push({
-        title,
-        assignee,
-        priority,
+        title: title,
+        assignee: person,
+        priority: parseInt(priority),
         completed: false,
-        type: 'Team',
         created_at: Date.now()
       }).then(() => {
         document.getElementById('title').value = '';
-        statusDiv.innerHTML = '<span style="color: #4CAF50;">Task added!</span>';
-        setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
-      }).catch(error => {
-        statusDiv.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+        document.getElementById('status').innerHTML = '<span style="color: green;">Task added!</span>';
+        setTimeout(() => { document.getElementById('status').innerHTML = ''; }, 2000);
+      }).catch(err => {
+        document.getElementById('status').innerHTML = '<span style="color: red;">Error: ' + err.message + '</span>';
       });
     }
 
-    function renderTasks() {
-      const open = allTasks.filter(t => !t.completed).length;
-      const done = allTasks.filter(t => t.completed).length;
-      
-      document.getElementById('openCount').textContent = open;
-      document.getElementById('doneCount').textContent = done;
-      document.getElementById('totalCount').textContent = allTasks.length;
+    function loadTasks() {
+      db.ref('tasks').on('value', (snapshot) => {
+        const tasks = [];
+        let open = 0, done = 0;
+        
+        if (snapshot.exists()) {
+          snapshot.forEach((child) => {
+            const task = child.val();
+            task.id = child.key;
+            tasks.push(task);
+            if (task.completed) done++; else open++;
+          });
+        }
 
-      const html = allTasks.length === 0
-        ? '<div class="loading">No tasks yet</div>'
-        : allTasks.map(task => `
-          <div class="task" style="opacity: ${task.completed ? 0.6 : 1}">
-            <div class="task-title">${task.title}</div>
-            <div class="task-meta">
-              ${task.assignee} • Priority ${task.priority} • ${task.completed ? '✓ Done' : 'Open'}
-              <button onclick="deleteTask('${task.id}')" style="margin-left: 12px; background: none; border: none; color: #ff6b6b; cursor: pointer;">Delete</button>
-            </div>
-          </div>
-        `).join('');
+        document.getElementById('open').textContent = open;
+        document.getElementById('done').textContent = done;
+        document.getElementById('total').textContent = tasks.length;
 
-      document.getElementById('tasksList').innerHTML = html;
+        const html = tasks.length === 0 ? '<div style="color: #999;">No tasks</div>' : 
+          tasks.map(t => `<div class="task"><strong>${t.title}</strong><br><small>${t.assignee} • Priority ${t.priority}</small></div>`).join('');
+        
+        document.getElementById('tasks').innerHTML = html;
+      });
     }
 
-    function deleteTask(id) {
-      db.ref(`tasks/${id}`).remove();
-    }
-
-    document.getElementById('title').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') addTask();
-    });
+    loadTasks();
   </script>
 </body>
 </html>
