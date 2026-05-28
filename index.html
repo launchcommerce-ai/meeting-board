@@ -5,434 +5,82 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Launch Commerce Task Board</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f8f9fa;
-      color: #333;
-    }
-
-    .header {
-      background-color: #0a1f44;
-      color: white;
-      padding: 24px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .header-content {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .header h1 {
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .header p {
-      opacity: 0.8;
-      font-size: 14px;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 24px;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .stat-card {
-      background-color: white;
-      padding: 16px;
-      border-radius: 8px;
-      text-align: center;
-      border: 1px solid #e0e0e0;
-    }
-
-    .stat-number {
-      font-size: 24px;
-      font-weight: 700;
-      color: #0a1f44;
-    }
-
-    .stat-label {
-      font-size: 12px;
-      color: #666;
-      margin-top: 4px;
-    }
-
-    .add-task-section {
-      background-color: white;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 24px;
-      border: 1px solid #e0e0e0;
-    }
-
-    .add-task-section h2 {
-      font-size: 18px;
-      font-weight: 600;
-      color: #0a1f44;
-      margin-bottom: 16px;
-    }
-
-    .task-input-row {
-      display: grid;
-      grid-template-columns: 1fr 150px 120px 120px 100px;
-      gap: 12px;
-    }
-
-    input[type="text"],
-    select {
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-      font-family: inherit;
-    }
-
-    input[type="text"]:focus,
-    select:focus {
-      outline: none;
-      border-color: #ff7a1a !important;
-      box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.1);
-    }
-
-    button {
-      padding: 8px 12px;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 14px;
-    }
-
-    .btn-primary {
-      background-color: #ff7a1a;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    .btn-primary:hover {
-      background-color: #e66f0f;
-    }
-
-    .filters-section {
-      background-color: white;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 24px;
-      border: 1px solid #e0e0e0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: flex-end;
-    }
-
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .filter-group label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #666;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-    }
-
-    .task-groups {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .task-group {
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    .group-header {
-      width: 100%;
-      padding: 16px;
-      background-color: white;
-      border: none;
-      border-bottom: 1px solid #e0e0e0;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 16px;
-      font-weight: 600;
-      color: #0a1f44;
-      transition: background-color 0.2s;
-    }
-
-    .group-header:hover {
-      background-color: #f9f9f9;
-    }
-
-    .group-header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex: 1;
-    }
-
-    .assignee-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-    }
-
-    .group-header-stats {
-      font-size: 12px;
-      color: #999;
-      margin-left: 8px;
-    }
-
-    .task-list {
-      background-color: white;
-      border-top: 1px solid #e0e0e0;
-    }
-
-    .task-item {
-      padding: 16px;
-      border-bottom: 1px solid #f0f0f0;
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      transition: background-color 0.2s;
-    }
-
-    .task-item:last-child {
-      border-bottom: none;
-    }
-
-    .task-item:hover {
-      background-color: #fafafa;
-    }
-
-    .task-item.completed {
-      opacity: 0.6;
-    }
-
-    .task-checkbox {
-      width: 20px;
-      height: 20px;
-      margin-top: 2px;
-      cursor: pointer;
-      accent-color: #ff7a1a;
-    }
-
-    .task-content {
-      flex: 1;
-    }
-
-    .task-title {
-      font-size: 15px;
-      margin-bottom: 12px;
-      font-weight: 500;
-      word-break: break-word;
-    }
-
-    .task-item.completed .task-title {
-      text-decoration: line-through;
-      color: #999;
-    }
-
-    .task-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .star-rating {
-      display: flex;
-      gap: 4px;
-    }
-
-    .star {
-      background: none;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      color: #ccc;
-      padding: 0;
-      transition: transform 0.2s;
-    }
-
-    .star:hover {
-      transform: scale(1.2);
-    }
-
-    .star.active {
-      color: #ff7a1a;
-    }
-
-    .badge {
-      font-size: 12px;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-weight: 500;
-    }
-
-    .badge-team {
-      background-color: #e3f2fd;
-      color: #1976d2;
-    }
-
-    .badge-client {
-      background-color: #f3e5f5;
-      color: #7b1fa2;
-    }
-
-    .task-delete {
-      background: none;
-      border: none;
-      color: #ccc;
-      cursor: pointer;
-      font-size: 18px;
-      padding: 0;
-      transition: color 0.2s;
-      margin-left: auto;
-    }
-
-    .task-delete:hover {
-      color: #ff6b6b;
-    }
-
-    .empty-state {
-      background-color: white;
-      border-radius: 8px;
-      padding: 60px 20px;
-      text-align: center;
-      color: #999;
-      border: 1px solid #e0e0e0;
-    }
-
-    .footer {
-      margin-top: 48px;
-      padding-top: 24px;
-      border-top: 1px solid #e0e0e0;
-      text-align: center;
-      font-size: 13px;
-      color: #999;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 60px 20px;
-      color: #666;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; color: #333; }
+    .header { background: #0a1f44; color: white; padding: 24px; text-align: center; }
+    .header h1 { font-size: 28px; margin-bottom: 8px; }
+    .header p { opacity: 0.8; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .section { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #e0e0e0; }
+    .section h2 { font-size: 18px; margin-bottom: 16px; color: #0a1f44; }
+    .form-row { display: grid; grid-template-columns: 1fr 150px 120px 100px; gap: 12px; }
+    input, select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; }
+    input:focus, select:focus { outline: none; border-color: #ff7a1a; box-shadow: 0 0 0 3px rgba(255,122,26,0.1); }
+    button { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: inherit; }
+    .btn-add { background: #ff7a1a; color: white; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-add:hover { background: #e66f0f; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat { text-align: center; padding: 16px; border: 1px solid #e0e0e0; border-radius: 8px; }
+    .stat-num { font-size: 24px; font-weight: 700; color: #0a1f44; }
+    .stat-label { font-size: 12px; color: #666; margin-top: 4px; }
+    .tasks { display: flex; flex-direction: column; gap: 12px; }
+    .task { padding: 12px; background: #f9f9f9; border-left: 3px solid #ff7a1a; border-radius: 4px; }
+    .task-title { font-weight: 500; margin-bottom: 8px; }
+    .task-meta { font-size: 12px; color: #666; }
+    .loading { text-align: center; color: #666; }
+    .error { color: #ff6b6b; }
   </style>
 </head>
 <body>
   <div class="header">
-    <div class="header-content">
-      <h1>Launch Commerce Task Board</h1>
-      <p>Organize and execute your team's tasks in real-time</p>
-    </div>
+    <h1>Launch Commerce Task Board</h1>
+    <p>Real-time task management powered by Fathom</p>
   </div>
 
   <div class="container">
     <div class="stats">
-      <div class="stat-card">
-        <div class="stat-number" id="openCount">0</div>
+      <div class="stat">
+        <div class="stat-num" id="openCount">0</div>
         <div class="stat-label">Open</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-number" id="doneCount">0</div>
+      <div class="stat">
+        <div class="stat-num" id="doneCount">0</div>
         <div class="stat-label">Done</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-number" id="showingCount">0</div>
-        <div class="stat-label">Showing</div>
+      <div class="stat">
+        <div class="stat-num" id="totalCount">0</div>
+        <div class="stat-label">Total</div>
       </div>
     </div>
 
-    <div class="add-task-section">
+    <div class="section">
       <h2>Add Task</h2>
-      <div class="task-input-row">
-        <input type="text" id="taskTitle" placeholder="Task description" />
-        <select id="taskAssignee">
-          <option value="Greg">Greg</option>
-          <option value="Luisa">Luisa</option>
-          <option value="Yvonne">Yvonne</option>
-          <option value="Candice">Candice</option>
-          <option value="Joshua">Joshua</option>
+      <div class="form-row">
+        <input type="text" id="title" placeholder="Task description">
+        <select id="assignee">
+          <option>Greg</option>
+          <option>Luisa</option>
+          <option>Yvonne</option>
+          <option>Candice</option>
+          <option>Joshua</option>
         </select>
-        <select id="taskType">
-          <option value="Team">Team Task</option>
-          <option value="Client">Client Task</option>
-        </select>
-        <select id="taskPriority">
+        <select id="priority">
           <option value="1">Priority 1</option>
           <option value="2">Priority 2</option>
           <option value="3" selected>Priority 3</option>
           <option value="4">Priority 4</option>
           <option value="5">Priority 5</option>
         </select>
-        <button class="btn-primary" onclick="window.appState.addTask()">+ Add</button>
+        <button class="btn-add" onclick="addTask()">+ Add</button>
       </div>
+      <div id="addStatus" style="margin-top: 12px; font-size: 12px;"></div>
     </div>
 
-    <div class="filters-section">
-      <div class="filter-group">
-        <label>Status</label>
-        <select id="filterStatus" onchange="window.appState.render()">
-          <option value="open">Open</option>
-          <option value="done">Done</option>
-          <option value="all">All</option>
-        </select>
+    <div class="section">
+      <h2>Tasks</h2>
+      <div id="tasksList" class="tasks">
+        <div class="loading">Connecting to Firebase...</div>
       </div>
-      <div class="filter-group">
-        <label>Assignee</label>
-        <select id="filterAssignee" onchange="window.appState.render()">
-          <option value="all">All</option>
-          <option value="Greg">Greg</option>
-          <option value="Luisa">Luisa</option>
-          <option value="Yvonne">Yvonne</option>
-          <option value="Candice">Candice</option>
-          <option value="Joshua">Joshua</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Type</label>
-        <select id="filterType" onchange="window.appState.render()">
-          <option value="all">All</option>
-          <option value="Team">Team</option>
-          <option value="Client">Client</option>
-        </select>
-      </div>
-      <button style="background: none; border: none; color: #666; cursor: pointer; font-size: 14px;" onclick="window.appState.resetFilters()">Reset</button>
-    </div>
-
-    <div id="taskGroups" class="task-groups">
-      <div class="loading">Loading tasks...</div>
-    </div>
-
-    <div class="footer">
-      <p>All tasks are saved to Firebase and synced in real-time across your team.</p>
     </div>
   </div>
 
@@ -451,181 +99,79 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+    const db = firebase.database();
 
-    const COLORS = {
-      'Greg': '#ff7a1a',
-      'Luisa': '#0a1f44',
-      'Yvonne': '#4CAF50',
-      'Candice': '#2196F3',
-      'Joshua': '#FF9800'
-    };
+    let allTasks = [];
 
-    window.appState = {
-      allTasks: [],
-      expandedGroups: {},
-
-      init: function() {
-        database.ref('tasks').on('value', (snapshot) => {
-          this.allTasks = [];
-          if (snapshot.exists()) {
-            snapshot.forEach((child) => {
-              this.allTasks.push({
-                id: child.key,
-                ...child.val()
-              });
-            });
-          }
-          this.render();
+    db.ref('tasks').on('value', (snapshot) => {
+      allTasks = [];
+      if (snapshot.exists()) {
+        snapshot.forEach((child) => {
+          allTasks.push({ id: child.key, ...child.val() });
         });
-
-        document.getElementById('taskTitle').addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') this.addTask();
-        });
-      },
-
-      addTask: function() {
-        const title = document.getElementById('taskTitle').value.trim();
-        if (!title) return;
-
-        database.ref('tasks').push({
-          title: title,
-          assignee: document.getElementById('taskAssignee').value,
-          type: document.getElementById('taskType').value,
-          priority: parseInt(document.getElementById('taskPriority').value),
-          completed: false,
-          created_at: Date.now()
-        });
-
-        document.getElementById('taskTitle').value = '';
-      },
-
-      updateTask: function(id, updates) {
-        database.ref(`tasks/${id}`).update(updates);
-      },
-
-      deleteTask: function(id) {
-        database.ref(`tasks/${id}`).remove();
-      },
-
-      toggleGroup: function(assignee) {
-        this.expandedGroups[assignee] = !this.expandedGroups[assignee];
-        this.render();
-      },
-
-      resetFilters: function() {
-        document.getElementById('filterStatus').value = 'open';
-        document.getElementById('filterAssignee').value = 'all';
-        document.getElementById('filterType').value = 'all';
-        this.render();
-      },
-
-      getFilteredTasks: function() {
-        const status = document.getElementById('filterStatus').value;
-        const assignee = document.getElementById('filterAssignee').value;
-        const type = document.getElementById('filterType').value;
-
-        return this.allTasks.filter(t => {
-          if (status === 'open' && t.completed) return false;
-          if (status === 'done' && !t.completed) return false;
-          if (assignee !== 'all' && t.assignee !== assignee) return false;
-          if (type !== 'all' && t.type !== type) return false;
-          return true;
-        });
-      },
-
-      getGroupedTasks: function() {
-        const filtered = this.getFilteredTasks();
-        const grouped = {};
-
-        filtered.forEach(task => {
-          if (!grouped[task.assignee]) {
-            grouped[task.assignee] = [];
-          }
-          grouped[task.assignee].push(task);
-        });
-
-        Object.keys(grouped).forEach(assignee => {
-          grouped[assignee].sort((a, b) => b.priority - a.priority);
-        });
-
-        return grouped;
-      },
-
-      render: function() {
-        const filtered = this.getFilteredTasks();
-        const grouped = this.getGroupedTasks();
-        const openCount = this.allTasks.filter(t => !t.completed).length;
-        const doneCount = this.allTasks.filter(t => t.completed).length;
-
-        document.getElementById('openCount').textContent = openCount;
-        document.getElementById('doneCount').textContent = doneCount;
-        document.getElementById('showingCount').textContent = filtered.length;
-
-        const groupsHtml = Object.keys(grouped).length === 0
-          ? '<div class="empty-state">No tasks match your filters</div>'
-          : Object.keys(grouped)
-              .sort()
-              .map(assignee => {
-                const tasks = grouped[assignee];
-                const isExpanded = this.expandedGroups[assignee] !== false;
-                const pending = tasks.filter(t => !t.completed).length;
-                const done = tasks.filter(t => t.completed).length;
-
-                return `
-                  <div class="task-group">
-                    <button class="group-header" onclick="window.appState.toggleGroup('${assignee}')">
-                      <div class="group-header-left">
-                        <div class="assignee-dot" style="background-color: ${COLORS[assignee]}"></div>
-                        <h3>${assignee}</h3>
-                        <span class="group-header-stats">(${pending} pending, ${done} done)</span>
-                      </div>
-                      <span>▼</span>
-                    </button>
-                    ${isExpanded ? `
-                      <div class="task-list">
-                        ${tasks.map((task) => `
-                          <div class="task-item ${task.completed ? 'completed' : ''}">
-                            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="window.appState.updateTask('${task.id}', {completed: !${task.completed}})">
-                            <div class="task-content">
-                              <div class="task-title">${this.escapeHtml(task.title)}</div>
-                              <div class="task-controls">
-                                <div class="star-rating">
-                                  ${[1,2,3,4,5].map(star => `
-                                    <button class="star ${star <= task.priority ? 'active' : ''}" onclick="window.appState.updateTask('${task.id}', {priority: ${star}})" title="Set priority to ${star}">★</button>
-                                  `).join('')}
-                                </div>
-                                <span class="badge ${task.type === 'Team' ? 'badge-team' : 'badge-client'}">${task.type}</span>
-                                <select onchange="window.appState.updateTask('${task.id}', {assignee: this.value})" style="padding: 6px 8px; font-size: 13px; border: 1px solid #ddd; border-radius: 6px;">
-                                  <option value="Greg" ${task.assignee === 'Greg' ? 'selected' : ''}>Greg</option>
-                                  <option value="Luisa" ${task.assignee === 'Luisa' ? 'selected' : ''}>Luisa</option>
-                                  <option value="Yvonne" ${task.assignee === 'Yvonne' ? 'selected' : ''}>Yvonne</option>
-                                  <option value="Candice" ${task.assignee === 'Candice' ? 'selected' : ''}>Candice</option>
-                                  <option value="Joshua" ${task.assignee === 'Joshua' ? 'selected' : ''}>Joshua</option>
-                                </select>
-                              </div>
-                            </div>
-                            <button class="task-delete" onclick="window.appState.deleteTask('${task.id}')" title="Delete task">✕</button>
-                          </div>
-                        `).join('')}
-                      </div>
-                    ` : ''}
-                  </div>
-                `;
-              })
-              .join('');
-
-        document.getElementById('taskGroups').innerHTML = groupsHtml;
-      },
-
-      escapeHtml: function(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
       }
-    };
+      renderTasks();
+    });
 
-    window.appState.init();
+    function addTask() {
+      const title = document.getElementById('title').value.trim();
+      const assignee = document.getElementById('assignee').value;
+      const priority = parseInt(document.getElementById('priority').value);
+      const statusDiv = document.getElementById('addStatus');
+
+      if (!title) {
+        statusDiv.innerHTML = '<span class="error">Please enter a task</span>';
+        return;
+      }
+
+      statusDiv.innerHTML = '<span style="color: #666;">Adding...</span>';
+
+      db.ref('tasks').push({
+        title,
+        assignee,
+        priority,
+        completed: false,
+        type: 'Team',
+        created_at: Date.now()
+      }).then(() => {
+        document.getElementById('title').value = '';
+        statusDiv.innerHTML = '<span style="color: #4CAF50;">Task added!</span>';
+        setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
+      }).catch(error => {
+        statusDiv.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+      });
+    }
+
+    function renderTasks() {
+      const open = allTasks.filter(t => !t.completed).length;
+      const done = allTasks.filter(t => t.completed).length;
+      
+      document.getElementById('openCount').textContent = open;
+      document.getElementById('doneCount').textContent = done;
+      document.getElementById('totalCount').textContent = allTasks.length;
+
+      const html = allTasks.length === 0
+        ? '<div class="loading">No tasks yet</div>'
+        : allTasks.map(task => `
+          <div class="task" style="opacity: ${task.completed ? 0.6 : 1}">
+            <div class="task-title">${task.title}</div>
+            <div class="task-meta">
+              ${task.assignee} • Priority ${task.priority} • ${task.completed ? '✓ Done' : 'Open'}
+              <button onclick="deleteTask('${task.id}')" style="margin-left: 12px; background: none; border: none; color: #ff6b6b; cursor: pointer;">Delete</button>
+            </div>
+          </div>
+        `).join('');
+
+      document.getElementById('tasksList').innerHTML = html;
+    }
+
+    function deleteTask(id) {
+      db.ref(`tasks/${id}`).remove();
+    }
+
+    document.getElementById('title').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addTask();
+    });
   </script>
 </body>
 </html>
