@@ -1287,73 +1287,99 @@ initModalStars();
 loadManualTasks();
 applyFilters();
 
-// ── openRec ───────────────────────────────────────────────────────────────────
+// ── openRec: open Fathom recording at exact timestamp ─────────────────────────
 function openRec(el) {
   var url = el.getAttribute('data-url');
   if (url) window.open(url, '_blank', 'noopener,noreferrer');
 }
 
-// ── JSONBin cross-user sync ───────────────────────────────────────────────────
+// ── Cloud sync via JSONBin ────────────────────────────────────────────────────
 var _BLOB = "https://jsonblob.com/api/jsonBlob/019e6d33-ca02-76d2-b93b-6c52b301a09a";
-var _sTimer = null;
+var _lastPushed = '';
 
-function pushCloud() {
-  try {
-    fetch(_BLOB, {
-      method:'PUT', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({done:[...doneSet], stars:starMap, assignees:assigneeMap})
-    }).catch(function(){});
-  } catch(e){}
+function _getState() {
+  return JSON.stringify({
+    done: Array.from(doneSet || window.doneSet || new Set()),
+    stars: starMap || window.starMap || {},
+    assignees: assigneeMap || window.assigneeMap || {}
+  });
 }
 
-function pullCloud() {
+function pushBlob() {
+  var state = _getState();
+  if (state === _lastPushed) return; // nothing changed
+  _lastPushed = state;
+  fetch(_BLOB, {
+    method:'PUT',
+    headers:{'Content-Type':'application/json','Accept':'application/json'},
+    body: state
+  }).catch(function(){});
+}
+
+function pullBlob() {
   fetch(_BLOB, {headers:{'Accept':'application/json'}})
-    .then(function(r){return r.json();})
-    .then(function(d){
-      var ch=false;
-      if(d.done) d.done.forEach(function(k){
-        if(!doneSet.has(k)){
-          doneSet.add(k);
-          document.querySelectorAll('.task-row[data-key="'+k+'"]').forEach(function(r){
-            r.classList.add('done'); var cb=r.querySelector('.task-check'); if(cb)cb.checked=true;
-          }); ch=true;
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var ds = doneSet || window.doneSet;
+      var sm = starMap || window.starMap;
+      var am = assigneeMap || window.assigneeMap;
+      var changed = false;
+      if (d.done) d.done.forEach(function(k) {
+        if (!ds.has(k)) {
+          ds.add(k);
+          document.querySelectorAll('.task-row[data-key="'+k+'"]').forEach(function(r) {
+            r.classList.add('done'); var cb=r.querySelector('.task-check'); if(cb) cb.checked=true;
+          });
+          changed = true;
         }
       });
-      if(d.stars) Object.keys(d.stars).forEach(function(k){
-        if(!starMap[k]){ starMap[k]=d.stars[k];
-          document.querySelectorAll('.star-col[data-key="'+k+'"]').forEach(function(c){renderStars(c,d.stars[k]);});
-          document.querySelectorAll('.task-row[data-key="'+k+'"]').forEach(function(r){updateRowPriority(r,d.stars[k]);});
-          ch=true; }
+      if (d.stars) Object.keys(d.stars).forEach(function(k) {
+        if (!sm[k]) {
+          sm[k] = d.stars[k];
+          document.querySelectorAll('.star-col[data-key="'+k+'"]').forEach(function(c){ renderStars(c,d.stars[k]); });
+          document.querySelectorAll('.task-row[data-key="'+k+'"]').forEach(function(r){ updateRowPriority(r,d.stars[k]); });
+          changed = true;
+        }
       });
-      if(d.assignees) Object.keys(d.assignees).forEach(function(k){
-        if(!assigneeMap[k]){assigneeMap[k]=d.assignees[k];ch=true;}
+      if (d.assignees) Object.keys(d.assignees).forEach(function(k) {
+        if (!am[k]) { am[k]=d.assignees[k]; changed=true; }
       });
-      if(ch){applyAssigneeOverrides();updateStats();applyFilters();}
+      if (changed) { updateStats(); applyFilters(); applyAssigneeOverrides(); }
+      _lastPushed = _getState(); // sync baseline after pull
     }).catch(function(){});
 }
 
-var _basePersist=persistState;
-persistState=function(){
-  _basePersist();
-  clearTimeout(_sTimer); _sTimer=setTimeout(pushCloud,800);
-};
-setTimeout(pullCloud,400);
-setInterval(pullCloud,60000);
+// Poll: push if changed every 2s, pull every 30s
+var _pollCount = 0;
+setInterval(function() {
+  _pollCount++;
+  pushBlob();               // push if state changed
+  if (_pollCount % 15 === 0) pullBlob(); // pull every ~30s
+}, 2000);
 
-// ── Per-client filter: ?client=Name ───────────────────────────────────────────
-(function(){
-  var p=new URLSearchParams(window.location.search);
-  var cf=p.get('client')||p.get('assignee');
-  if(!cf) return;
-  var decoded=decodeURIComponent(cf.replace(/\+/g,' '));
-  var sel=document.getElementById('filter-assignee');
-  if(sel){sel.value=decoded; var fg=sel.closest('.filter-group'); if(fg)fg.style.visibility='hidden';}
-  var b=document.createElement('div');
-  b.style.cssText='background:#eff6ff;border-bottom:1px solid #bfdbfe;color:#1d4ed8;font-size:12px;padding:8px 20px;font-weight:500;text-align:center;position:sticky;top:58px;z-index:50';
-  b.textContent='\uD83D\uDCCB Tasks for: '+decoded;
-  var main=document.querySelector('.main'); if(main) main.insertBefore(b,main.firstChild);
+// Initial pull after 1 second
+setTimeout(pullBlob, 1000);
+
+// ── Per-client URL filter: ?client=Lewis+Herms ────────────────────────────────
+(function() {
+  var p = new URLSearchParams(window.location.search);
+  var cf = p.get('client') || p.get('assignee');
+  if (!cf) return;
+  var decoded = decodeURIComponent(cf.replace(/\+/g, ' '));
+  var sel = document.getElementById('filter-assignee');
+  if (sel) {
+    sel.value = decoded;
+    var fg = sel.closest('.filter-group');
+    if (fg) fg.style.visibility = 'hidden';
+  }
+  var banner = document.createElement('div');
+  banner.style.cssText = 'background:#eff6ff;border-bottom:1px solid #bfdbfe;color:#1d4ed8;font-size:12px;padding:8px 20px;font-weight:500;text-align:center;position:sticky;top:58px;z-index:50';
+  banner.textContent = '\uD83D\uDCCB Tasks for: ' + decoded;
+  var main = document.querySelector('.main');
+  if (main) main.insertBefore(banner, main.firstChild);
   applyFilters();
 })();
+
 </script>
 </body>
 </html>
