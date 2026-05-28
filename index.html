@@ -1293,39 +1293,53 @@ function openRec(el) {
   if (url) window.open(url, '_blank', 'noopener,noreferrer');
 }
 
-// ── Cloud sync via JSONBin ────────────────────────────────────────────────────
+// ── Cloud sync via JSONBin (v6 — with visible debug) ─────────────────────────
 var _BLOB = "https://jsonblob.com/api/jsonBlob/019e6d33-ca02-76d2-b93b-6c52b301a09a";
-var _lastPushed = '';
+var _lastPushed = null;
+var _syncStatus = document.createElement('div');
+_syncStatus.style.cssText = 'position:fixed;bottom:8px;left:8px;background:#1e293b;color:#94a3b8;font-size:10px;padding:4px 8px;border-radius:4px;z-index:9999;font-family:monospace';
+_syncStatus.textContent = '⏳ Loading...';
+document.body.appendChild(_syncStatus);
 
-function _getState() {
-  return JSON.stringify({
-    done: Array.from(doneSet || window.doneSet || new Set()),
-    stars: starMap || window.starMap || {},
-    assignees: assigneeMap || window.assigneeMap || {}
-  });
+function _getStateObj() {
+  var ds = window.doneSet || doneSet;
+  var sm = window.starMap || starMap;
+  var am = window.assigneeMap || assigneeMap;
+  return {
+    done: ds ? Array.from(ds) : [],
+    stars: sm || {},
+    assignees: am || {}
+  };
 }
 
 function pushBlob() {
-  var state = _getState();
-  if (state === _lastPushed) return; // nothing changed
-  _lastPushed = state;
+  var obj = _getStateObj();
+  var stateStr = JSON.stringify(obj);
+  if (_lastPushed !== null && stateStr === _lastPushed) return;
+  _lastPushed = stateStr;
+  _syncStatus.textContent = '⬆ Pushing...';
   fetch(_BLOB, {
-    method:'PUT',
-    headers:{'Content-Type':'application/json','Accept':'application/json'},
-    body: state
-  }).catch(function(){});
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+    body: stateStr
+  }).then(function(r) {
+    _syncStatus.textContent = '✓ Synced ' + new Date().toLocaleTimeString();
+    return r.json();
+  }).catch(function(e) {
+    _syncStatus.textContent = '✗ Push failed: ' + e.message;
+  });
 }
 
 function pullBlob() {
-  fetch(_BLOB, {headers:{'Accept':'application/json'}})
+  _syncStatus.textContent = '⬇ Pulling...';
+  fetch(_BLOB, {headers: {'Accept': 'application/json'}})
     .then(function(r) { return r.json(); })
     .then(function(d) {
-      var ds = doneSet || window.doneSet;
-      var sm = starMap || window.starMap;
-      var am = assigneeMap || window.assigneeMap;
+      var ds = window.doneSet || doneSet;
+      var sm = window.starMap || starMap;
       var changed = false;
-      if (d.done) d.done.forEach(function(k) {
-        if (!ds.has(k)) {
+      if (d.done && Array.isArray(d.done)) d.done.forEach(function(k) {
+        if (ds && !ds.has(k)) {
           ds.add(k);
           document.querySelectorAll('.task-row[data-key="'+k+'"]').forEach(function(r) {
             r.classList.add('done'); var cb=r.querySelector('.task-check'); if(cb) cb.checked=true;
@@ -1334,31 +1348,40 @@ function pullBlob() {
         }
       });
       if (d.stars) Object.keys(d.stars).forEach(function(k) {
-        if (!sm[k]) {
+        if (sm && !sm[k]) {
           sm[k] = d.stars[k];
-          document.querySelectorAll('.star-col[data-key="'+k+'"]').forEach(function(c){ renderStars(c,d.stars[k]); });
-          document.querySelectorAll('.task-row[data-key="'+k+'"]').forEach(function(r){ updateRowPriority(r,d.stars[k]); });
+          document.querySelectorAll('.star-col[data-key="'+k+'"]').forEach(function(c){renderStars(c,d.stars[k]);  });
+          document.querySelectorAll('.task-row[data-key="'+k+'"]').forEach(function(r){updateRowPriority(r,d.stars[k]);  });
           changed = true;
         }
       });
-      if (d.assignees) Object.keys(d.assignees).forEach(function(k) {
-        if (!am[k]) { am[k]=d.assignees[k]; changed=true; }
-      });
-      if (changed) { updateStats(); applyFilters(); applyAssigneeOverrides(); }
-      _lastPushed = _getState(); // sync baseline after pull
-    }).catch(function(){});
+      if (changed) { updateStats(); applyFilters(); }
+      _lastPushed = JSON.stringify(_getStateObj());
+      var ts = new Date().toLocaleTimeString();
+      _syncStatus.textContent = '✓ Pulled ' + ts + ' | ' + (d.done||[]).length + ' done';
+    }).catch(function(e) {
+      _syncStatus.textContent = '✗ Pull error: ' + e.message;
+    });
 }
 
-// Poll: push if changed every 2s, pull every 30s
-var _pollCount = 0;
-setInterval(function() {
-  _pollCount++;
-  pushBlob();               // push if state changed
-  if (_pollCount % 15 === 0) pullBlob(); // pull every ~30s
-}, 2000);
+// Force sync button
+var _syncBtn = document.createElement('button');
+_syncBtn.style.cssText = 'position:fixed;bottom:32px;left:8px;background:#2563eb;color:white;font-size:10px;padding:4px 8px;border:none;border-radius:4px;z-index:9999;cursor:pointer';
+_syncBtn.textContent = '☁ Sync Now';
+_syncBtn.onclick = function() { pushBlob(); setTimeout(pullBlob, 500); };
+document.body.appendChild(_syncBtn);
 
-// Initial pull after 1 second
-setTimeout(pullBlob, 1000);
+// Poll every 3 seconds
+var _tick = 0;
+setInterval(function() {
+  _tick++;
+  pushBlob();
+  if (_tick % 10 === 0) pullBlob();
+}, 3000);
+
+// Initial pull
+setTimeout(pullBlob, 1500);
+
 
 // ── Per-client URL filter: ?client=Lewis+Herms ────────────────────────────────
 (function() {
