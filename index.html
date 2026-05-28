@@ -1293,56 +1293,60 @@ function openRec(el) {
   if (url) window.open(url, '_blank', 'noopener,noreferrer');
 }
 
-// ── Cloud sync via JSONBin (v6 — with visible debug) ─────────────────────────
-var _BLOB = "https://jsonblob.com/api/jsonBlob/019e6d33-ca02-76d2-b93b-6c52b301a09a";
+// ── Firebase Realtime Database sync ──────────────────────────────────────────
+var _FB = "https://fathom-meeting-board-default-rtdb.firebaseio.com/state.json";
 var _lastPushed = null;
-var _syncStatus = document.createElement('div');
-_syncStatus.style.cssText = 'position:fixed;bottom:8px;left:8px;background:#1e293b;color:#94a3b8;font-size:10px;padding:4px 8px;border-radius:4px;z-index:9999;font-family:monospace';
-_syncStatus.textContent = '⏳ Loading...';
-document.body.appendChild(_syncStatus);
+var _syncEl = document.createElement('div');
+_syncEl.style.cssText = 'position:fixed;bottom:8px;left:8px;background:#1e293b;color:#94a3b8;font-size:11px;padding:4px 10px;border-radius:5px;z-index:9999;font-family:monospace;max-width:300px';
+_syncEl.textContent = '⏳ Connecting...';
+document.body.appendChild(_syncEl);
 
-function _getStateObj() {
-  var ds = window.doneSet || doneSet;
-  var sm = window.starMap || starMap;
-  var am = window.assigneeMap || assigneeMap;
+var _syncBtn = document.createElement('button');
+_syncBtn.style.cssText = 'position:fixed;bottom:36px;left:8px;background:#2563eb;color:white;font-size:11px;padding:5px 12px;border:none;border-radius:5px;z-index:9999;cursor:pointer;font-family:inherit';
+_syncBtn.textContent = '☁ Sync Now';
+_syncBtn.onclick = function() { doSync(); };
+document.body.appendChild(_syncBtn);
+
+function _stateObj() {
   return {
-    done: ds ? Array.from(ds) : [],
-    stars: sm || {},
-    assignees: am || {}
+    done: Array.from(window.doneSet || doneSet || new Set()),
+    stars: window.starMap || starMap || {},
+    assignees: window.assigneeMap || assigneeMap || {}
   };
 }
 
-function pushBlob() {
-  var obj = _getStateObj();
-  var stateStr = JSON.stringify(obj);
-  if (_lastPushed !== null && stateStr === _lastPushed) return;
-  _lastPushed = stateStr;
-  _syncStatus.textContent = '⬆ Pushing...';
-  fetch(_BLOB, {
+function doSync() {
+  var obj = _stateObj();
+  var str = JSON.stringify(obj);
+  if (str === _lastPushed) { pullState(); return; }
+  _lastPushed = str;
+  _syncEl.textContent = '⬆ Saving...';
+  fetch(_FB, {
     method: 'PUT',
-    headers: {'Content-Type': 'text/plain'},
-    body: stateStr
-  }).then(function(r) {
-    _syncStatus.textContent = '✓ Synced ' + new Date().toLocaleTimeString();
-    return r.json();
-  }).catch(function(e) {
-    _syncStatus.textContent = '✗ Push failed: ' + e.message;
-  });
+    headers: {'Content-Type': 'application/json'},
+    body: str
+  }).then(function(r) { return r.json(); })
+    .then(function() {
+      _syncEl.textContent = '✓ Saved ' + new Date().toLocaleTimeString();
+      pullState();
+    }).catch(function(e) {
+      _syncEl.textContent = '✗ Save error: ' + e.message;
+    });
 }
 
-function pullBlob() {
-  _syncStatus.textContent = '⬇ Pulling...';
-  fetch(_BLOB, {headers: {'Accept': 'application/json'}})
-    .then(function(r) { return r.json(); })
+function pullState() {
+  fetch(_FB).then(function(r) { return r.json(); })
     .then(function(d) {
+      if (!d || !d.done) { _syncEl.textContent = '✓ Connected (empty)'; return; }
       var ds = window.doneSet || doneSet;
       var sm = window.starMap || starMap;
       var changed = false;
-      if (d.done && Array.isArray(d.done)) d.done.forEach(function(k) {
+      if (d.done) d.done.forEach(function(k) {
         if (ds && !ds.has(k)) {
           ds.add(k);
           document.querySelectorAll('.task-row[data-key="'+k+'"]').forEach(function(r) {
-            r.classList.add('done'); var cb=r.querySelector('.task-check'); if(cb) cb.checked=true;
+            r.classList.add('done');
+            var cb = r.querySelector('.task-check'); if (cb) cb.checked = true;
           });
           changed = true;
         }
@@ -1350,37 +1354,28 @@ function pullBlob() {
       if (d.stars) Object.keys(d.stars).forEach(function(k) {
         if (sm && !sm[k]) {
           sm[k] = d.stars[k];
-          document.querySelectorAll('.star-col[data-key="'+k+'"]').forEach(function(c){renderStars(c,d.stars[k]);  });
-          document.querySelectorAll('.task-row[data-key="'+k+'"]').forEach(function(r){updateRowPriority(r,d.stars[k]);  });
+          document.querySelectorAll('.star-col[data-key="'+k+'"]').forEach(function(c) { renderStars(c, d.stars[k]); });
+          document.querySelectorAll('.task-row[data-key="'+k+'"]').forEach(function(r) { updateRowPriority(r, d.stars[k]); });
           changed = true;
         }
       });
       if (changed) { updateStats(); applyFilters(); }
-      _lastPushed = JSON.stringify(_getStateObj());
-      var ts = new Date().toLocaleTimeString();
-      _syncStatus.textContent = '✓ Pulled ' + ts + ' | ' + (d.done||[]).length + ' done';
+      _lastPushed = JSON.stringify(_stateObj());
+      _syncEl.textContent = '✓ Live ' + new Date().toLocaleTimeString();
     }).catch(function(e) {
-      _syncStatus.textContent = '✗ Pull error: ' + e.message;
+      _syncEl.textContent = '✗ Error: ' + e.message;
     });
 }
 
-// Force sync button
-var _syncBtn = document.createElement('button');
-_syncBtn.style.cssText = 'position:fixed;bottom:32px;left:8px;background:#2563eb;color:white;font-size:10px;padding:4px 8px;border:none;border-radius:4px;z-index:9999;cursor:pointer';
-_syncBtn.textContent = '☁ Sync Now';
-_syncBtn.onclick = function() { pushBlob(); setTimeout(pullBlob, 500); };
-document.body.appendChild(_syncBtn);
-
-// Poll every 3 seconds
+// Sync every 5 seconds
 var _tick = 0;
 setInterval(function() {
   _tick++;
-  pushBlob();
-  if (_tick % 10 === 0) pullBlob();
-}, 3000);
+  doSync();
+}, 5000);
 
-// Initial pull
-setTimeout(pullBlob, 1500);
+// Initial load
+setTimeout(pullState, 800);
 
 
 // ── Per-client URL filter: ?client=Lewis+Herms ────────────────────────────────
